@@ -8,8 +8,8 @@ set -o pipefail
 
 # definitions
 
-FIREWALL_VM_NAME="sys-firewall"
-NET_VM_NAME="sys-net"
+#FIREWALL_VM_NAME="sys-firewall"
+#NET_VM_NAME="sys-net"
 PROTOCOL="tcp"
 
 # information
@@ -206,14 +206,26 @@ function expose_port() {
     error "The port must be a number greater 0 and lower 65536, not \"$PORT\"."
   fi
 
-  local NET_VM_NAME
-  local FIREWALL_VM_IP
+  local GWIP
   local TARGET_VM_IP
+  local FIREWALL_VM_IP
+  local NET_VM_IP
+  local NET_VM_NAME
+  local FIREWALL_VM_NAME
 
-  read -r NET_VM_NAME TARGET_VM_IP FIREWALL_VM_IP <<< $(get_vm_info $TARGET_VM_NAME)
+  read -r FIREWALL_VM_NAME TARGET_VM_IP GWIP  <<< $(get_vm_info $TARGET_VM_NAME)
+  exit_if_empty "${TARGET_VM_IP//-}"
+  exit_if_empty "${GWIP//-}"
 
-  exit_if_empty "$TARGET_VM_IP"
+
+  read -r NET_VM_NAME  FIREWALL_VM_IP GWIP <<< $(get_vm_info $FIREWALL_VM_NAME)
   exit_if_empty "$FIREWALL_VM_IP"
+  if [ "$GWIP" != "$FIREWALL_VM_IP" ]; then
+    echo "Target VM GWIP (${GWIP}) != FIREWALL_VM_IP (${FIREWALL_VM_IP})"
+    exit 1
+  fi
+
+  read -r x NET_VM_IP GWIP << $(get_vm_info $NET_VM_NAME)
   exit_if_empty "$NET_VM_IP"
 
   # change the system
