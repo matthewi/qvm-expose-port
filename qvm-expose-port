@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # Expose a port from a vm to the outside
 #
@@ -212,6 +212,7 @@ function expose_port() {
   local NET_VM_IP
   local NET_VM_NAME
   local FIREWALL_VM_NAME
+  local XNETVM
 
   read -r FIREWALL_VM_NAME TARGET_VM_IP GWIP  <<< $(get_vm_info $TARGET_VM_NAME)
   exit_if_empty "${TARGET_VM_IP//-}"
@@ -225,7 +226,7 @@ function expose_port() {
     exit 1
   fi
 
-  read -r x NET_VM_IP GWIP <<< $(get_vm_info $NET_VM_NAME)
+  read -r XNETVM NET_VM_IP GWIP <<< $(get_vm_info $NET_VM_NAME)
   exit_if_empty "$NET_VM_IP"
 
   # change the system
