@@ -78,6 +78,7 @@ function get_vm_ip() {
   local VM_NAME="$1"
 
   local VM_LISTING_LINE="`qvm-ls -n 2>>/dev/null | grep -E '^\\s*.?'"$VM_NAME"'.?\s*\|'`"
+  
   if [ -z "$VM_LISTING_LINE" ]; then
     error "The VM \"$VM_NAME\" does not exist. Please check the name."
   fi
@@ -205,12 +206,14 @@ function expose_port() {
     error "The port must be a number greater 0 and lower 65536, not \"$PORT\"."
   fi
 
-  # get the vm ip address
-  local TARGET_VM_IP="`get_vm_ip \"$TARGET_VM_NAME\"`"
+  local NET_VM_NAME
+  local FIREWALL_VM_IP
+  local TARGET_VM_IP
+
+  read -r NET_VM_NAME TARGET_VM_IP FIREWALL_VM_IP <<< $(get_vm_info $TARGET_VM_NAME)
+
   exit_if_empty "$TARGET_VM_IP"
-  local FIREWALL_VM_IP="`get_vm_ip \"$FIREWALL_VM_NAME\"`"
   exit_if_empty "$FIREWALL_VM_IP"
-  local NET_VM_IP="`get_vm_ip \"$NET_VM_NAME\"`"
   exit_if_empty "$NET_VM_IP"
 
   # change the system
@@ -218,6 +221,19 @@ function expose_port() {
   forward_port_in_vm "$FIREWALL_VM_NAME" "$TARGET_VM_IP" "$PORT"
   allow_traffic_to_vm "$TARGET_VM_NAME" "$TARGET_VM_IP" "$PORT"
   
+}
+
+function get_vm_info() {
+  local VM_NAME=$1
+  local VM_LISTING_LINE="$(qvm-ls -n $VM_NAME 2>>/dev/null)"
+
+  if [ -z "$VM_LISTING_LINE" ]; then
+    error "The VM \"$VM_NAME\" does not exist. Please check the name."
+  fi
+  if ! qvm-check --quiet --running "$VM_NAME"; then
+    error "The VM \"$VM_NAME\" is not running. Please start the VM with \"qvm-start $VM_NAME\"."
+  fi
+  echo $(echo $VM_LISTING_LINE | awk '{print $3, $4, $6};')
 }
 
 # parse arguments
