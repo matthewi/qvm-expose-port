@@ -214,8 +214,6 @@ function expose_port() {
   local FIREWALL_VM_NAME
   local XNETVM
 
-  local IFS='|'
-
   read -r FIREWALL_VM_NAME TARGET_VM_IP GWIP  <<< $(get_vm_info $TARGET_VM_NAME)
   exit_if_empty "${TARGET_VM_IP//-}"
   exit_if_empty "${GWIP//-}"
@@ -248,7 +246,7 @@ function get_vm_info() {
   if ! qvm-check --quiet --running "$VM_NAME"; then
     error "The VM \"$VM_NAME\" is not running. Please start the VM with \"qvm-start $VM_NAME\"."
   fi
-  echo $(echo $VM_LISTING_LINE | awk '{print $3, $4, $6};')
+  echo $(echo $VM_LISTING_LINE | awk -F'|' '{print $3, $4, $6};')
 }
 
 # parse arguments
