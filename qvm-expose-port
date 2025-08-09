@@ -214,6 +214,8 @@ function expose_port() {
   local FIREWALL_VM_NAME
   local XNETVM
 
+  local IFS='|'
+
   read -r FIREWALL_VM_NAME TARGET_VM_IP GWIP  <<< $(get_vm_info $TARGET_VM_NAME)
   exit_if_empty "${TARGET_VM_IP//-}"
   exit_if_empty "${GWIP//-}"
@@ -238,7 +240,7 @@ function expose_port() {
 
 function get_vm_info() {
   local VM_NAME=$1
-  local VM_LISTING_LINE="$(qvm-ls -n $VM_NAME 2>>/dev/null)"
+  local VM_LISTING_LINE="$(qvm-ls -n --raw-data $VM_NAME 2>>/dev/null)"
 
   if [ -z "$VM_LISTING_LINE" ]; then
     error "The VM \"$VM_NAME\" does not exist. Please check the name."
